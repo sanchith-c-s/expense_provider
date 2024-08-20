@@ -1,4 +1,6 @@
 import 'package:expanse_provider/models/database_provider.dart';
+import 'package:expanse_provider/widgets/category_screen/category_list.dart';
+import 'package:expanse_provider/widgets/category_screen/total_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -33,23 +35,17 @@ class _CategoryFetcherState extends State<CategoryFetcher> {
               child: Text(snapshot.error.toString()),
             );
           } else {
-            return Consumer<DatabaseProvider>(
-              builder: (_, db, __) {
-                var list = db.categories;
-                return ListView.builder(
-                  itemCount: list.length,
-                  itemBuilder: (_, i) => ListTile(
-                    leading: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Icon(list[i].icon),
-                    ),
-                    title: Text(list[i].title),
-                    subtitle: Text('entries : ${list[i].entries}'),
-                    trailing:
-                        Text('₹ ${(list[i].totalAmount).toStringAsFixed(2)}'),
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: 250,
+                    child: TotalChart(),
                   ),
-                );
-              },
+                  Expanded(child: CategoryList()),
+                ],
+              ),
             );
           }
         } else {

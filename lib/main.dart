@@ -1,5 +1,6 @@
 import 'package:expanse_provider/models/database_provider.dart';
 import 'package:expanse_provider/screens/category_screen.dart';
+import 'package:expanse_provider/screens/expense_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -21,6 +22,7 @@ class MyApp extends StatelessWidget {
       initialRoute: CategoryScreen.name,
       routes: {
         CategoryScreen.name: (_) => CategoryScreen(),
+        ExpenseScreen.name: (_) => ExpenseScreen(),
       },
     );
   }

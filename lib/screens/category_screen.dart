@@ -1,4 +1,5 @@
 import 'package:expanse_provider/widgets/category_screen/category_fetcher.dart';
+import 'package:expanse_provider/widgets/expense_form.dart';
 import 'package:flutter/material.dart';
 
 class CategoryScreen extends StatelessWidget {
@@ -12,6 +13,13 @@ class CategoryScreen extends StatelessWidget {
         title: Text('Categories'),
       ),
       body: CategoryFetcher(),
+      floatingActionButton: FloatingActionButton(onPressed: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          builder: (_) => ExpenseForm(),
+        );
+      }),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:expanse_provider/constants/icons.dart';
 import 'package:expanse_provider/models/ex_category.dart';
+import 'package:expanse_provider/models/expense.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -7,7 +8,8 @@ import 'package:path/path.dart';
 class DatabaseProvider with ChangeNotifier {
   List<ExpenseCategory> _categories = [];
   List<ExpenseCategory> get categories => _categories;
-
+  List<Expense> _expenses = [];
+  List<Expense> get expense => _expenses;
   Database? _database;
   Future<Database> get database async {
     final dbDirectory = await getDatabasesPath();
@@ -63,5 +65,91 @@ class DatabaseProvider with ChangeNotifier {
         return _categories;
       });
     });
+  }
+
+  Future<void> updateCategory(
+    String category,
+    int nEntries,
+    double nTotalAmount,
+  ) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn
+          .update(
+        cTable,
+        {
+          'entries': nEntries,
+          'totalAmount': nTotalAmount.toString(),
+        },
+        where: 'title == ?',
+        whereArgs: [category],
+      )
+          .then((_) {
+        var file =
+            _categories.firstWhere((element) => element.title == category);
+        file.entries = nEntries;
+        file.totalAmount = nTotalAmount;
+        notifyListeners();
+      });
+    });
+  }
+
+  Future<void> addExpense(Expense exp) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn
+          .insert(
+        eTable,
+        exp.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      )
+          .then((generatedId) {
+        final file = Expense(
+            amount: exp.amount,
+            id: generatedId,
+            title: exp.title,
+            date: exp.date,
+            category: exp.category);
+
+        _expenses.add(file);
+
+        notifyListeners();
+        var ex = findCategory(exp.category);
+        updateCategory(
+            exp.category, ex.entries + 1, ex.totalAmount + exp.amount);
+      });
+    });
+  }
+
+  Future<List<Expense>> fetchExpenses(String category) async {
+    final db = await database;
+    return await db.transaction((txn) async {
+      return await txn.query(eTable,
+          where: 'category == ?', whereArgs: [category]).then((data) {
+        final converted = List<Map<String, dynamic>>.from(data);
+        List<Expense> nList = List.generate(
+            converted.length, (index) => Expense.fromString(converted[index]));
+        _expenses = nList;
+        return _expenses;
+      });
+    });
+  }
+
+  ExpenseCategory findCategory(String title) {
+    return _categories.firstWhere((element) => element.title == title);
+  }
+
+  Map<String, dynamic> calculateEntriesAndAmount(String category) {
+    double total = 0.0;
+    var list = _expenses.where((element) => element.category == category);
+    for (final i in list) {
+      total += i.amount;
+    }
+    return {'entries': list.length, 'totalAmount': total};
+  }
+
+  double calculateTotalExpenses() {
+    return _categories.fold(
+        0.0, (previousValue, element) => previousValue + element.totalAmount);
   }
 }
