@@ -1,4 +1,5 @@
 import 'package:expanse_provider/models/database_provider.dart';
+import 'package:expanse_provider/widgets/expense_screen/expense_chart.dart';
 import 'package:expanse_provider/widgets/expense_screen/expense_list.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -35,7 +36,18 @@ class _ExpenseFetcherState extends State<ExpenseFetcher> {
               child: Text(snapshot.error.toString()),
             );
           } else {
-            return ExpenseList();
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: 250,
+                    child: ExpenseChart(widget.category),
+                  ),
+                  Expanded(child: ExpenseList()),
+                ],
+              ),
+            );
           }
         } else {
           return Center(
