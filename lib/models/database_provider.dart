@@ -6,10 +6,26 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class DatabaseProvider with ChangeNotifier {
+  String _searchText = '';
+  String get searchText => _searchText;
+  set searchText(String value) {
+    _searchText = value;
+    notifyListeners();
+  }
+
   List<ExpenseCategory> _categories = [];
   List<ExpenseCategory> get categories => _categories;
   List<Expense> _expenses = [];
-  List<Expense> get expense => _expenses;
+
+  List<Expense> get expense {
+    return _searchText != ''
+        ? _expenses
+            .where((e) =>
+                e.title.toLowerCase().contains(_searchText.toLowerCase()))
+            .toList()
+        : _expenses;
+  }
+
   Database? _database;
   Future<Database> get database async {
     final dbDirectory = await getDatabasesPath();
@@ -121,11 +137,36 @@ class DatabaseProvider with ChangeNotifier {
     });
   }
 
+  Future<void> deleteExpense(int expId, String category, double amount) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete(eTable, where: 'id == ?', whereArgs: [expId]).then((_) {
+        _expenses.removeWhere((element) => element.id == expId);
+        notifyListeners();
+        var ex = findCategory(category);
+        updateCategory(category, ex.entries + 1, ex.totalAmount - amount);
+      });
+    });
+  }
+
   Future<List<Expense>> fetchExpenses(String category) async {
     final db = await database;
     return await db.transaction((txn) async {
       return await txn.query(eTable,
           where: 'category == ?', whereArgs: [category]).then((data) {
+        final converted = List<Map<String, dynamic>>.from(data);
+        List<Expense> nList = List.generate(
+            converted.length, (index) => Expense.fromString(converted[index]));
+        _expenses = nList;
+        return _expenses;
+      });
+    });
+  }
+
+  Future<List<Expense>> fetchAllExpenses() async {
+    final db = await database;
+    return await db.transaction((txn) async {
+      return await txn.query(eTable).then((data) {
         final converted = List<Map<String, dynamic>>.from(data);
         List<Expense> nList = List.generate(
             converted.length, (index) => Expense.fromString(converted[index]));

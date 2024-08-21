@@ -1,4 +1,5 @@
 import 'package:expanse_provider/models/database_provider.dart';
+import 'package:expanse_provider/screens/all_expenses.dart';
 import 'package:expanse_provider/widgets/category_screen/category_list.dart';
 import 'package:expanse_provider/widgets/category_screen/total_chart.dart';
 import 'package:flutter/material.dart';
@@ -42,6 +43,20 @@ class _CategoryFetcherState extends State<CategoryFetcher> {
                   SizedBox(
                     height: 250,
                     child: TotalChart(),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Expense',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pushNamed(AllExpenses.name);
+                          },
+                          child: Text('View All'))
+                    ],
                   ),
                   Expanded(child: CategoryList()),
                 ],
